@@ -1,23 +1,24 @@
 const suits = ['♠', '♥', '♦', '♣'];
 const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 let deck = [];
-let playerHand = [];
-let computerHand = [];
 let playerBoard = [];
 let computerBoard = [];
+let drawnCard = null;
 
 // Initialize the game
 function initializeGame() {
   deck = createDeck();
   shuffleDeck(deck);
 
-  // Draw 5 cards for each player
-  playerHand = drawCards(5);
-  computerHand = drawCards(5);
-
-  // Set up the board
+  // Initialize boards with empty columns (5 columns each)
   playerBoard = Array(5).fill(null).map(() => []);
   computerBoard = Array(5).fill(null).map(() => []);
+
+  // Draw 5 cards for the computer
+  for (let i = 0; i < 5; i++) {
+    computerBoard[i].push(deck.pop());
+  }
+
   updateUI();
 }
 
@@ -40,20 +41,37 @@ function shuffleDeck(deck) {
   }
 }
 
-// Draw cards from the deck
-function drawCards(count) {
-  return deck.splice(0, count);
-}
-
 // Update the UI
 function updateUI() {
   const playerCards = document.getElementById('player-cards');
   const computerCards = document.getElementById('computer-cards');
+  const drawnCardDiv = document.getElementById('drawn-card');
   const status = document.getElementById('status');
 
-  playerCards.innerHTML = playerHand.map(cardToHTML).join('');
-  computerCards.innerHTML = computerHand.map(() => '<div class="card">?</div>').join('');
+  // Render player board
+  playerCards.innerHTML = renderBoard(playerBoard, true);
+
+  // Render computer board
+  computerCards.innerHTML = renderBoard(computerBoard, false);
+
+  // Display the drawn card
+  drawnCardDiv.innerHTML = drawnCard ? cardToHTML(drawnCard) : '';
+
+  // Update status
   status.textContent = `Deck: ${deck.length} cards remaining`;
+}
+
+// Render a board
+function renderBoard(board, isPlayer) {
+  return board
+    .map(
+      (column, columnIndex) =>
+        `<div class="column" data-column="${columnIndex}">
+          ${column.map(cardToHTML).join('')}
+          ${isPlayer && column.length < 5 ? '<div class="card placeholder">+</div>' : ''}
+        </div>`
+    )
+    .join('');
 }
 
 // Convert a card to HTML
@@ -68,8 +86,26 @@ document.getElementById('draw-card').addEventListener('click', () => {
     return;
   }
 
-  const drawnCard = drawCards(1)[0];
-  playerHand.push(drawnCard);
+  drawnCard = deck.pop();
+  updateUI();
+});
+
+// Handle placing a card
+document.getElementById('player-cards').addEventListener('click', (event) => {
+  if (!drawnCard) return;
+
+  const columnDiv = event.target.closest('.column');
+  if (!columnDiv) return;
+
+  const columnIndex = columnDiv.getAttribute('data-column');
+  if (playerBoard[columnIndex].length >= 5) {
+    alert('This column is full!');
+    return;
+  }
+
+  // Place the card in the selected column
+  playerBoard[columnIndex].push(drawnCard);
+  drawnCard = null;
   updateUI();
 });
 
