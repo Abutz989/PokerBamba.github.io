@@ -1,82 +1,81 @@
 body {
-    font-family: Arial, sans-serif;
-    background-color: #228b22;
-    color: white;
-    text-align: center;
-    margin: 0;
-    padding: 0;
-  }
-  
-  #game-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    padding: 20px;
-  }
-  
-  h1, h2 {
-    margin: 10px 0;
-  }
-  
-  .board {
-    width: 80%;
-    padding: 10px;
-    border: 2px solid white;
-    border-radius: 10px;
-    background-color: #006400;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .board-columns {
-    display: flex;
-    justify-content: space-around;
-    gap: 10px;
-    width: 100%;
-  }
-  
-  .card {
-    width: 60px;
-    height: 90px;
-    background-color: white;
-    color: black;
-    border: 1px solid black;
-    border-radius: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-  
-  .card.placeholder {
-    background-color: #ddd;
-  }
-  
-  #deck {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  #draw-card {
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: #ff4500;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  #drawn-card {
-    margin-top: 10px;
-  }
-  
-  #status {
-    font-size: 18px;
-  }
-  
+  font-family: Arial, sans-serif;
+  background-color: #228b22;
+  color: white;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+#game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+h1, h2 {
+  margin: 10px 0;
+}
+
+.board {
+  width: 80%;
+  padding: 10px;
+  border: 2px solid white;
+  border-radius: 10px;
+  background-color: #006400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.board-columns {
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
+  width: 100%;
+}
+
+.card {
+  width: 60px;
+  height: 90px;
+  background-color: white;
+  color: black;
+  border: 1px solid black;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.card.placeholder {
+  background-color: #ddd;
+}
+
+#deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#draw-card {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #ff4500;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#drawn-card {
+  margin-top: 10px;
+}
+
+#status {
+  font-size: 18px;
+}

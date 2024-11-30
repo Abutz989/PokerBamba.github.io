@@ -76,7 +76,9 @@ function renderBoard(board, isPlayer) {
 
 // Convert a card to HTML
 function cardToHTML(card) {
-  return `<div class="card">${card.value}${card.suit}</div>`;
+  if (!card) return '';
+  const color = card.suit === '♥' || card.suit === '♦' ? 'red' : 'black';
+  return `<div class="card" style="color: ${color}">${card.value}${card.suit}</div>`;
 }
 
 // Handle drawing a card
@@ -106,8 +108,26 @@ document.getElementById('player-cards').addEventListener('click', (event) => {
   // Place the card in the selected column
   playerBoard[columnIndex].push(drawnCard);
   drawnCard = null;
+
+  // After the player places their card, let the computer take its turn
+  computerTurn();
   updateUI();
 });
+
+// Computer's turn: randomly place a card
+function computerTurn() {
+  if (deck.length === 0) return;
+
+  const card = deck.pop();
+  const availableColumns = computerBoard
+    .map((column, index) => (column.length < 5 ? index : null))
+    .filter(index => index !== null);
+
+  if (availableColumns.length > 0) {
+    const randomColumn = availableColumns[Math.floor(Math.random() * availableColumns.length)];
+    computerBoard[randomColumn].push(card);
+  }
+}
 
 // Start the game
 initializeGame();
