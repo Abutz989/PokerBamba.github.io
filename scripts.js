@@ -4,6 +4,7 @@ let deck = [];
 let playerBoard = [];
 let computerBoard = [];
 let drawnCard = null;
+let isFinalTwoCardsPhase = false;
 
 // Initialize the game
 function initializeGame() {
@@ -62,8 +63,11 @@ function updateUI() {
   // Update status
   status.textContent = `Deck: ${deck.length} cards remaining`;
 
-  // Update the button text if the deck is empty
-  if (deck.length === 0) {
+  // Update the button text for final two cards
+  if (deck.length === 2) {
+    isFinalTwoCardsPhase = true;
+    drawCardButton.textContent = 'Switch or Discard';
+  } else if (deck.length === 0) {
     drawCardButton.textContent = 'Match';
   }
 }
@@ -79,10 +83,26 @@ function renderBoard(board, isPlayer) {
               isPlayer || rowIndex < column.length - 1 ? cardToHTML(card) : hiddenCardToHTML()
             )
             .join('')}
-          ${isPlayer && column.length < 5 ? '<div class="card placeholder">+</div>' : ''}
+          ${
+            isPlayer && column.length < 5 && canPlaceInColumn(columnIndex)
+              ? '<div class="card placeholder">+</div>'
+              : ''
+          }
         </div>`
     )
     .join('');
+}
+
+// Determine if a card can be placed in a column (row completion rule)
+function canPlaceInColumn(columnIndex) {
+  // Check if all columns in the previous row are full
+  const currentRow = Math.floor(columnIndex / 5);
+  if (currentRow === 0) return true;
+
+  const startOfPreviousRow = (currentRow - 1) * 5;
+  const previousRowColumns = playerBoard.slice(startOfPreviousRow, startOfPreviousRow + 5);
+
+  return previousRowColumns.every(column => column.length === 5);
 }
 
 // Convert a card to HTML
@@ -97,8 +117,13 @@ function hiddenCardToHTML() {
   return `<div class="card">/.\\</div>`;
 }
 
-// Handle drawing a card or matching columns
+// Handle drawing a card or final two card phase
 document.getElementById('draw-card').addEventListener('click', () => {
+  if (isFinalTwoCardsPhase) {
+    handleFinalTwoCards();
+    return;
+  }
+
   if (deck.length === 0) {
     matchColumns(); // Match columns when deck is empty
     return;
@@ -116,8 +141,8 @@ document.getElementById('player-cards').addEventListener('click', (event) => {
   if (!columnDiv) return;
 
   const columnIndex = columnDiv.getAttribute('data-column');
-  if (playerBoard[columnIndex].length >= 5) {
-    alert('This column is full!');
+  if (playerBoard[columnIndex].length >= 5 || !canPlaceInColumn(columnIndex)) {
+    alert('You cannot place a card here!');
     return;
   }
 
@@ -129,6 +154,41 @@ document.getElementById('player-cards').addEventListener('click', (event) => {
   computerTurn();
   updateUI();
 });
+
+// Handle final two cards phase
+function handleFinalTwoCards() {
+  if (!drawnCard) return;
+
+  const switchCard = confirm('Do you want to switch this card with one from the last row?');
+  if (switchCard) {
+    const cardIndex = parseInt(
+      prompt('Enter the position (1-5) of the card in the last row to switch with:')
+    );
+    if (cardIndex >= 1 && cardIndex <= 5) {
+      const lastRow = playerBoard[4];
+      [lastRow[cardIndex - 1], drawnCard] = [drawnCard, lastRow[cardIndex - 1]];
+    }
+  }
+
+  drawnCard = null;
+
+  // Computer's action during the final phase
+  computerFinalTwoCards();
+  updateUI();
+}
+
+// Computer's final two cards decision
+function computerFinalTwoCards() {
+  const lastRow = computerBoard[4];
+  const randomIndex = Math.floor(Math.random() * lastRow.length);
+
+  // Randomly decide to switch or discard
+  if (Math.random() < 0.5) {
+    lastRow[randomIndex] = deck.pop();
+  } else {
+    deck.pop();
+  }
+}
 
 // Computer's turn: randomly place a card
 function computerTurn() {
@@ -163,7 +223,6 @@ function matchColumns() {
 
 // Compare two columns (simplified Poker scoring logic)
 function compareColumns(playerCards, computerCards) {
-  // Example scoring: higher total card value wins
   const playerScore = calculateScore(playerCards);
   const computerScore = calculateScore(computerCards);
 
