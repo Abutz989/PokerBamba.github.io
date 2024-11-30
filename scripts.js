@@ -14,8 +14,9 @@ function initializeGame() {
   playerBoard = Array(5).fill(null).map(() => []);
   computerBoard = Array(5).fill(null).map(() => []);
 
-  // Draw 5 cards for the computer
+  // Draw 5 cards for both the player and the computer
   for (let i = 0; i < 5; i++) {
+    playerBoard[i].push(deck.pop());
     computerBoard[i].push(deck.pop());
   }
 
@@ -47,6 +48,7 @@ function updateUI() {
   const computerCards = document.getElementById('computer-cards');
   const drawnCardDiv = document.getElementById('drawn-card');
   const status = document.getElementById('status');
+  const drawCardButton = document.getElementById('draw-card');
 
   // Render player board
   playerCards.innerHTML = renderBoard(playerBoard, true);
@@ -59,6 +61,11 @@ function updateUI() {
 
   // Update status
   status.textContent = `Deck: ${deck.length} cards remaining`;
+
+  // Update the button text if the deck is empty
+  if (deck.length === 0) {
+    drawCardButton.textContent = 'Match';
+  }
 }
 
 // Render a board
@@ -67,7 +74,11 @@ function renderBoard(board, isPlayer) {
     .map(
       (column, columnIndex) =>
         `<div class="column" data-column="${columnIndex}">
-          ${column.map(cardToHTML).join('')}
+          ${column
+            .map((card, rowIndex) =>
+              isPlayer || rowIndex < column.length - 1 ? cardToHTML(card) : hiddenCardToHTML()
+            )
+            .join('')}
           ${isPlayer && column.length < 5 ? '<div class="card placeholder">+</div>' : ''}
         </div>`
     )
@@ -81,10 +92,15 @@ function cardToHTML(card) {
   return `<div class="card" style="color: ${color}">${card.value}${card.suit}</div>`;
 }
 
-// Handle drawing a card
+// Render a hidden card (for the computer's last row)
+function hiddenCardToHTML() {
+  return `<div class="card">/.\\</div>`;
+}
+
+// Handle drawing a card or matching columns
 document.getElementById('draw-card').addEventListener('click', () => {
   if (deck.length === 0) {
-    alert('No cards left in the deck!');
+    matchColumns(); // Match columns when deck is empty
     return;
   }
 
@@ -127,6 +143,43 @@ function computerTurn() {
     const randomColumn = availableColumns[Math.floor(Math.random() * availableColumns.length)];
     computerBoard[randomColumn].push(card);
   }
+}
+
+// Match columns and determine the winner
+function matchColumns() {
+  const results = [];
+  for (let i = 0; i < 5; i++) {
+    const playerCards = playerBoard[i];
+    const computerCards = computerBoard[i];
+    const result = compareColumns(playerCards, computerCards);
+    results.push(result);
+  }
+
+  const playerWins = results.filter(result => result === 'Player').length;
+  const computerWins = results.filter(result => result === 'Computer').length;
+
+  alert(`Game Over! Player: ${playerWins}, Computer: ${computerWins}`);
+}
+
+// Compare two columns (simplified Poker scoring logic)
+function compareColumns(playerCards, computerCards) {
+  // Example scoring: higher total card value wins
+  const playerScore = calculateScore(playerCards);
+  const computerScore = calculateScore(computerCards);
+
+  if (playerScore > computerScore) return 'Player';
+  if (computerScore > playerScore) return 'Computer';
+  return 'Tie';
+}
+
+// Calculate a column's score (simplified logic)
+function calculateScore(cards) {
+  const valueMap = {
+    '2': 2, '3': 3, '4': 4, '5': 5, '6': 6,
+    '7': 7, '8': 8, '9': 9, '10': 10,
+    'J': 11, 'Q': 12, 'K': 13, 'A': 14
+  };
+  return cards.reduce((sum, card) => sum + valueMap[card.value], 0);
 }
 
 // Start the game
