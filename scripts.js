@@ -5,6 +5,7 @@ let playerBoard = [];
 let computerBoard = [];
 let drawnCard = null;
 let isFinalTwoCardsPhase = false;
+let finalSwitchTurnCompleted = false;
 
 // Initialize the game
 function initializeGame() {
@@ -95,7 +96,6 @@ function renderBoard(board, isPlayer) {
 
 // Determine if a card can be placed in a column (row completion rule)
 function canPlaceInColumn(columnIndex) {
-  // Check if all columns in the previous row are full
   const currentRow = Math.floor(columnIndex / 5);
   if (currentRow === 0) return true;
 
@@ -133,76 +133,54 @@ document.getElementById('draw-card').addEventListener('click', () => {
   updateUI();
 });
 
-// Handle placing a card
-document.getElementById('player-cards').addEventListener('click', (event) => {
-  if (!drawnCard) return;
-
-  const columnDiv = event.target.closest('.column');
-  if (!columnDiv) return;
-
-  const columnIndex = columnDiv.getAttribute('data-column');
-  if (playerBoard[columnIndex].length >= 5 || !canPlaceInColumn(columnIndex)) {
-    alert('You cannot place a card here!');
-    return;
-  }
-
-  // Place the card in the selected column
-  playerBoard[columnIndex].push(drawnCard);
-  drawnCard = null;
-
-  // After the player places their card, let the computer take its turn
-  computerTurn();
-  updateUI();
-});
-
-// Handle final two cards phase
+// Handle the "Switch or Discard" phase
 function handleFinalTwoCards() {
   if (!drawnCard) return;
 
-  const switchCard = confirm('Do you want to switch this card with one from the last row?');
+  const switchCard = confirm('Do you want to switch this card with one from your board?');
   if (switchCard) {
-    const cardIndex = parseInt(
-      prompt('Enter the position (1-5) of the card in the last row to switch with:')
+    const cardPosition = prompt(
+      'Enter the position as "row,column" (e.g., 3,2 for row 3 and column 2):'
     );
-    if (cardIndex >= 1 && cardIndex <= 5) {
-      const lastRow = playerBoard[4];
-      [lastRow[cardIndex - 1], drawnCard] = [drawnCard, lastRow[cardIndex - 1]];
+
+    if (cardPosition) {
+      const [row, column] = cardPosition.split(',').map(Number);
+      if (
+        row > 0 &&
+        row <= playerBoard.length &&
+        column > 0 &&
+        column <= playerBoard[row - 1].length
+      ) {
+        const selectedCard = playerBoard[row - 1][column - 1];
+        playerBoard[row - 1][column - 1] = drawnCard;
+        drawnCard = selectedCard;
+      }
     }
   }
 
-  drawnCard = null;
-
-  // Computer's action during the final phase
+  // Proceed with the computer's turn during final two cards phase
   computerFinalTwoCards();
-  updateUI();
+
+  // If both player and computer have taken their final turns, proceed to match
+  if (finalSwitchTurnCompleted) {
+    matchColumns();
+  } else {
+    finalSwitchTurnCompleted = true;
+    updateUI();
+  }
 }
 
-// Computer's final two cards decision
+// Computer's final turn during "Switch or Discard"
 function computerFinalTwoCards() {
-  const lastRow = computerBoard[4];
+  const lastRow = computerBoard[computerBoard.length - 1];
   const randomIndex = Math.floor(Math.random() * lastRow.length);
 
   // Randomly decide to switch or discard
   if (Math.random() < 0.5) {
-    lastRow[randomIndex] = deck.pop();
-  } else {
-    deck.pop();
+    lastRow[randomIndex] = drawnCard;
   }
-}
 
-// Computer's turn: randomly place a card
-function computerTurn() {
-  if (deck.length === 0) return;
-
-  const card = deck.pop();
-  const availableColumns = computerBoard
-    .map((column, index) => (column.length < 5 ? index : null))
-    .filter(index => index !== null);
-
-  if (availableColumns.length > 0) {
-    const randomColumn = availableColumns[Math.floor(Math.random() * availableColumns.length)];
-    computerBoard[randomColumn].push(card);
-  }
+  drawnCard = null;
 }
 
 // Match columns and determine the winner
